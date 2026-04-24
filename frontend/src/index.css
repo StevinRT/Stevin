@@ -11,19 +11,19 @@
         --card-foreground: 36 30% 94%;
         --popover: 28 8% 9%;
         --popover-foreground: 36 30% 94%;
-        --primary: 32 100% 53%;              /* #FF9A11 vibrant orange */
-        --primary-foreground: 30 6% 5%;      /* dark on orange */
+        --primary: 22 95% 49%;               /* #F46310 deep burnt orange */
+        --primary-foreground: 30 8% 6%;      /* near-black on orange */
         --secondary: 28 8% 12%;              /* #201E1A warm charcoal for sections */
         --secondary-foreground: 36 30% 94%;
         --muted: 28 8% 14%;                  /* #26231F */
         --muted-foreground: 36 12% 68%;      /* #B5AEA2 soft warm gray */
-        --accent: 23 90% 62%;                /* #F48A3D warm accent orange */
-        --accent-foreground: 30 6% 5%;
+        --accent: 18 88% 56%;                /* #EC6A34 warm coral-orange accent */
+        --accent-foreground: 30 8% 6%;
         --destructive: 0 70% 55%;
         --destructive-foreground: 0 0% 100%;
         --border: 28 8% 17%;                 /* #2B2824 */
         --input: 28 8% 17%;
-        --ring: 32 100% 53%;
+        --ring: 22 95% 49%;
         --radius: 1rem;
 
         /* Brand extras */
