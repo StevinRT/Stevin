@@ -4,30 +4,30 @@
 
 @layer base {
     :root {
-        /* PJ Ours palette — Organic tropical cafe */
-        --background: 40 55% 98%;            /* #FDFBF7 coconut milk */
-        --foreground: 0 0% 12%;              /* #1E1E1E ink */
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 12%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 12%;
-        --primary: 35 100% 55%;              /* #FF9F1C papaya */
-        --primary-foreground: 0 0% 12%;
-        --secondary: 153 43% 18%;            /* #1B4332 jungle */
-        --secondary-foreground: 0 0% 100%;
-        --muted: 42 35% 93%;                 /* #F3EFE6 */
-        --muted-foreground: 0 0% 36%;        /* #5C5C5C */
-        --accent: 23 87% 67%;                /* #F4A261 */
-        --accent-foreground: 0 0% 12%;
-        --destructive: 0 72% 51%;
+        /* PJ Ours — Black & Orange theme */
+        --background: 30 6% 5%;              /* #0E0D0B near-black, warm undertone */
+        --foreground: 36 30% 94%;            /* #F6F1E6 warm off-white */
+        --card: 28 8% 9%;                    /* #181613 elevated warm black */
+        --card-foreground: 36 30% 94%;
+        --popover: 28 8% 9%;
+        --popover-foreground: 36 30% 94%;
+        --primary: 32 100% 53%;              /* #FF9A11 vibrant orange */
+        --primary-foreground: 30 6% 5%;      /* dark on orange */
+        --secondary: 28 8% 12%;              /* #201E1A warm charcoal for sections */
+        --secondary-foreground: 36 30% 94%;
+        --muted: 28 8% 14%;                  /* #26231F */
+        --muted-foreground: 36 12% 68%;      /* #B5AEA2 soft warm gray */
+        --accent: 23 90% 62%;                /* #F48A3D warm accent orange */
+        --accent-foreground: 30 6% 5%;
+        --destructive: 0 70% 55%;
         --destructive-foreground: 0 0% 100%;
-        --border: 38 20% 90%;                /* #EAE6DF */
-        --input: 38 20% 90%;
-        --ring: 35 100% 55%;
+        --border: 28 8% 17%;                 /* #2B2824 */
+        --input: 28 8% 17%;
+        --ring: 32 100% 53%;
         --radius: 1rem;
 
         /* Brand extras */
-        --whatsapp: 142 70% 49%;             /* #25D366 */
+        --whatsapp: 142 70% 49%;             /* #25D366 WhatsApp green kept for brand recognition */
         --whatsapp-foreground: 0 0% 100%;
     }
 }
@@ -62,9 +62,14 @@
         font-weight: 700;
     }
     ::selection {
-        background: hsl(var(--primary) / 0.35);
+        background: hsl(var(--primary) / 0.4);
         color: hsl(var(--foreground));
     }
+    /* Light scrollbars that match theme */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+    ::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.7); }
 }
 
 @layer utilities {
@@ -80,13 +85,14 @@
         position: absolute; inset: 0;
         pointer-events: none;
         background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.25 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-        mix-blend-mode: multiply;
-        opacity: 0.06;
+        mix-blend-mode: screen;
+        opacity: 0.05;
     }
 
     .card-shadow {
-        box-shadow: 0 10px 30px -12px rgba(27, 67, 50, 0.12),
-                    0 2px 6px -2px rgba(27, 67, 50, 0.06);
+        box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.55),
+                    0 2px 6px -2px rgba(0, 0, 0, 0.35),
+                    0 0 0 1px hsl(var(--border) / 0.6) inset;
     }
 
     @keyframes fade-up {

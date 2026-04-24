@@ -118,7 +118,7 @@ export default function MenuPage() {
                   onClick={() => scrollToCat(cat)}
                   className={`shrink-0 rounded-full px-4 h-10 font-sub text-sm transition-all border ${
                     activeCat === cat
-                      ? "bg-secondary text-secondary-foreground border-secondary"
+                      ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card text-foreground/70 hover:text-foreground border-border"
                   }`}
                   data-testid={`cat-tab-${cat.replace(/\s+/g, "-").toLowerCase()}`}

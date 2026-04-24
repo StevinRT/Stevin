@@ -7,7 +7,7 @@ export default function Header() {
   const { itemCount, openCart } = useCart();
 
   const navLinkClass = ({ isActive }) =>
-    `font-sub text-sm transition-colors ${isActive ? "text-secondary" : "text-foreground/70 hover:text-foreground"}`;
+    `font-sub text-sm transition-colors ${isActive ? "text-primary" : "text-foreground/70 hover:text-foreground"}`;
 
   return (
     <header
