@@ -20,7 +20,16 @@ Modern, mobile-first ordering website for **PJ Ours**, a juice & shakes café in
 - WhatsApp message must include: outlet, name, phone, order type, address (if delivery), itemized list, subtotal, parcel, grand total
 - Mobile-first UX with sticky floating cart button
 
-## What's Been Implemented (as of 2026-02-24)
+## What's Been Implemented (as of 2026-02-24, updated 2026-04-24)
+
+### Iteration 2 (2026-04-24) — P1 features shipped
+- **Backend rewrite** (FastAPI): MongoDB-backed menu, outlets, files. Admin JWT auth (bcrypt-safe password compare + brute-force lockout). Admin CRUD endpoints for menu + outlets. Object storage integration (Emergent) with public `/api/files/{path}` proxy for uploaded images. Menu auto-seeded on first startup (175 items preserving size tiers from original PDF).
+- **Size variants (S/M/L)** implemented only for categories that had 3-tier pricing in the source PDF: Juice, Fusion Shake, Avil Milk, Milk Shake, Desserts, Mocktail. Single-price categories (Ice Cream Shakes, Falooda, Ice Cream, Fruit Soda, Mojito) unchanged.
+- **Cart persistence** via localStorage (`pjours_cart_v2`) with a composite `lineId` so same item in different sizes are independent cart lines; size label shown in cart and in the WhatsApp order message.
+- **Admin dashboard** at `/admin` (password `pjours@2026` → `backend/.env`): Menu tab with search/filter/create/edit/delete + image upload (JPEG/PNG/WEBP/GIF ≤ 5 MB) + size-variants editor; Outlets tab to edit names, WhatsApp, address, hours, Google Maps query.
+- **Test coverage**: backend pytest 19/19 pass (admin auth, JWT, CRUD, uploads, public endpoints), frontend e2e 100% on new flows.
+
+### Iteration 1 (2026-02-24)
 - Landing page with Hero (bento image layout), Highlights strip, Popular Items (5 cards), Reviews section (rating + keyword chips + 4 review cards), Locations (2 outlets with Google Maps embed + WhatsApp chat button)
 - Menu page with sticky category tabs (11 categories, 175 items), search, per-item Add button, in-cart counter indicator
 - Cart Drawer (shadcn Sheet) with qty +/-, remove, parcel row showing formula, subtotal/total
@@ -42,11 +51,10 @@ Modern, mobile-first ordering website for **PJ Ours**, a juice & shakes café in
 
 ## Prioritized Backlog
 ### P1 — Next
-- **Admin panel** to edit menu items, prices, and outlet WhatsApp numbers without touching code
-- **Persist cart to localStorage** so page refreshes don't wipe the cart
-- **Size variants** for items that originally had S/M/L tiers in the PDF (most juice/shake items had 3 portion sizes in the source menu)
+- **Real photography** for popular/menu items (admin upload ready; waiting on photos from owner)
 - **Add-ons** (cornflakes, tutti frutti, extra ice cream) that attach to individual cart lines
 - **Outlet auto-detect** via geolocation as a convenience (still overridable)
+- **Combo deals** row on landing page (AOV upsell)
 
 ### P2 — Later
 - Loyalty / repeat order history (requires accounts)
