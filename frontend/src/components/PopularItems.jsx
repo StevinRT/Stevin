@@ -1,25 +1,30 @@
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MENU, POPULAR_ITEM_NAMES, POPULAR_IMAGES } from "@/data/menu";
+import { useData } from "@/context/DataContext";
 import { useCart } from "@/context/CartContext";
+import { FALLBACK_POPULAR_IMAGES, resolveImageUrl } from "@/data/menu";
 import { toast } from "sonner";
 
-const pickPopular = () => {
-  // map name -> first matching item
-  return POPULAR_ITEM_NAMES.map((n) => {
-    const item = MENU.find((m) => m.name === n);
-    return item ? { ...item, image: POPULAR_IMAGES[n] } : null;
-  }).filter(Boolean);
-};
-
 export default function PopularItems() {
-  const { addItem, openCart } = useCart();
-  const items = pickPopular();
+  const { popular, loading } = useData();
+  const { addItem } = useCart();
 
-  const handleAdd = (item) => {
-    addItem({ id: item.id, name: item.name, price: item.price, category: item.category });
-    toast.success(`${item.name} added to cart`, { description: `₹${item.price} · Tap cart to checkout` });
+  const items = popular.slice(0, 5);
+
+  const handleAdd = (it) => {
+    // For popular card quick-add, use the base price (smallest size if present)
+    const size = it.sizes && it.sizes.length > 0 ? it.sizes[0] : null;
+    addItem({
+      itemId: it.id,
+      name: it.name,
+      price: size ? size.price : it.base_price,
+      category: it.category,
+      sizeLabel: size ? size.label : null,
+    });
+    toast.success(`${it.name} added`, {
+      description: size ? `${size.label} · ₹${size.price}` : `₹${it.base_price}`,
+    });
   };
 
   return (
@@ -39,41 +44,55 @@ export default function PopularItems() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {items.map((it, idx) => (
-            <article
-              key={it.id}
-              className="group relative rounded-3xl bg-card border border-border overflow-hidden card-shadow hover:-translate-y-1 transition-transform anim-fade-up"
-              style={{ animationDelay: `${idx * 60}ms` }}
-              data-testid={`popular-card-${idx}`}
-            >
-              <div className="aspect-[4/5] overflow-hidden bg-muted">
-                <img
-                  src={it.image}
-                  alt={it.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-4 flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="font-sub text-[10px] text-muted-foreground uppercase tracking-wider">{it.category}</div>
-                  <div className="font-display text-base font-semibold truncate">{it.name}</div>
-                  <div className="text-sm font-semibold mt-0.5">₹{it.price}</div>
-                </div>
-                <Button
-                  size="icon"
-                  className="rounded-full h-9 w-9 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
-                  onClick={() => handleAdd(it)}
-                  data-testid={`popular-add-${idx}`}
-                  aria-label={`Add ${it.name} to cart`}
+        {loading && items.length === 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="rounded-3xl border border-border bg-muted/50 aspect-[4/5] animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {items.map((it, idx) => {
+              const imgUrl = resolveImageUrl(it.image_url) || FALLBACK_POPULAR_IMAGES[idx % FALLBACK_POPULAR_IMAGES.length];
+              const smallest = it.sizes && it.sizes.length > 0 ? it.sizes[0].price : it.base_price;
+              return (
+                <article
+                  key={it.id}
+                  className="group relative rounded-3xl bg-card border border-border overflow-hidden card-shadow hover:-translate-y-1 transition-transform anim-fade-up"
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                  data-testid={`popular-card-${idx}`}
                 >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </article>
-          ))}
-        </div>
+                  <div className="aspect-[4/5] overflow-hidden bg-muted">
+                    <img
+                      src={imgUrl}
+                      alt={it.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-4 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-sub text-[10px] text-muted-foreground uppercase tracking-wider">{it.category}</div>
+                      <div className="font-display text-base font-semibold truncate">{it.name}</div>
+                      <div className="text-sm font-semibold mt-0.5">
+                        {it.sizes && it.sizes.length > 0 ? `from ₹${smallest}` : `₹${it.base_price}`}
+                      </div>
+                    </div>
+                    <Button
+                      size="icon"
+                      className="rounded-full h-9 w-9 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                      onClick={() => handleAdd(it)}
+                      data-testid={`popular-add-${idx}`}
+                      aria-label={`Add ${it.name} to cart`}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

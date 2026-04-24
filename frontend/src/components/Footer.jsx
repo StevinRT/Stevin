@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { OUTLETS } from "@/data/menu";
+import { useData } from "@/context/DataContext";
 
 export default function Footer() {
+  const { outlets } = useData();
   return (
     <footer className="bg-secondary text-secondary-foreground mt-10" data-testid="site-footer">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
@@ -24,16 +25,17 @@ export default function Footer() {
               <li><Link to="/menu" className="hover:text-primary">Menu</Link></li>
               <li><a href="/#reviews" className="hover:text-primary">Reviews</a></li>
               <li><a href="/#locations" className="hover:text-primary">Locations</a></li>
+              <li><Link to="/admin" className="hover:text-primary text-secondary-foreground/60">Admin</Link></li>
             </ul>
           </div>
 
           <div>
             <div className="font-label text-[11px] text-primary mb-4">Our Outlets</div>
             <ul className="space-y-3 font-sub text-sm">
-              {OUTLETS.map((o) => (
+              {outlets.map((o) => (
                 <li key={o.id}>
                   <div className="font-semibold">{o.name}</div>
-                  <div className="text-secondary-foreground/70">{o.fullAddress}</div>
+                  <div className="text-secondary-foreground/70">{o.full_address}</div>
                   <a href={`https://wa.me/${o.whatsapp}`} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                     +{o.whatsapp.slice(0,2)} {o.whatsapp.slice(2,7)} {o.whatsapp.slice(7)}
                   </a>

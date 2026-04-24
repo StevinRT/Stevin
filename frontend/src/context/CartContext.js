@@ -1,35 +1,67 @@
-import { createContext, useContext, useMemo, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 
 const CartContext = createContext(null);
 
 export const PARCEL_CHARGE_PER_ITEM = 5;
+const STORAGE_KEY = "pjours_cart_v2";
+
+/**
+ * Cart line shape:
+ *   { lineId, itemId, name, price, category, sizeLabel?, qty }
+ * lineId is derived from itemId + sizeLabel so same item with different sizes become separate lines.
+ */
+const makeLineId = (itemId, sizeLabel) =>
+  sizeLabel ? `${itemId}::${sizeLabel}` : `${itemId}::_base`;
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); // [{ id, name, price, category, qty }]
+  const [items, setItems] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   const [isOpen, setIsOpen] = useState(false);
 
-  const addItem = useCallback((item) => {
+  // Persist on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // ignore
+    }
+  }, [items]);
+
+  // addItem: accepts ({ itemId, name, price, category, sizeLabel? })
+  const addItem = useCallback((payload) => {
+    const lineId = makeLineId(payload.itemId, payload.sizeLabel);
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const existing = prev.find((i) => i.lineId === lineId);
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, qty: i.qty + 1 } : i
+          i.lineId === lineId ? { ...i, qty: i.qty + 1 } : i
         );
       }
-      return [...prev, { ...item, qty: 1 }];
+      return [...prev, { ...payload, lineId, qty: 1 }];
     });
   }, []);
 
-  const decrementItem = useCallback((id) => {
+  const incrementLine = useCallback((lineId) => {
+    setItems((prev) => prev.map((i) => (i.lineId === lineId ? { ...i, qty: i.qty + 1 } : i)));
+  }, []);
+
+  const decrementLine = useCallback((lineId) => {
     setItems((prev) =>
       prev
-        .map((i) => (i.id === id ? { ...i, qty: i.qty - 1 } : i))
+        .map((i) => (i.lineId === lineId ? { ...i, qty: i.qty - 1 } : i))
         .filter((i) => i.qty > 0)
     );
   }, []);
 
-  const removeItem = useCallback((id) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeLine = useCallback((lineId) => {
+    setItems((prev) => prev.filter((i) => i.lineId !== lineId));
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
@@ -48,13 +80,15 @@ export function CartProvider({ children }) {
   const value = {
     items,
     addItem,
-    decrementItem,
-    removeItem,
+    incrementLine,
+    decrementLine,
+    removeLine,
     clearCart,
     isOpen,
     openCart,
     closeCart,
     setIsOpen,
+    makeLineId,
     ...totals,
   };
 

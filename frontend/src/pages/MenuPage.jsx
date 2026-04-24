@@ -1,24 +1,27 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef } from "react";
 import { Search, Plus, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MENU, CATEGORIES, CATEGORY_META } from "@/data/menu";
+import { CATEGORIES, CATEGORY_META } from "@/data/menu";
 import { useCart } from "@/context/CartContext";
+import { useData } from "@/context/DataContext";
 import { toast } from "sonner";
 
 export default function MenuPage() {
-  const { addItem, openCart, items: cartItems } = useCart();
+  const { addItem, items: cartItems, makeLineId } = useCart();
+  const { menu, loading } = useData();
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState(CATEGORIES[0]);
+  const [selectedSizes, setSelectedSizes] = useState({}); // { itemId: sizeIndex }
   const sectionRefs = useRef({});
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return MENU;
-    return MENU.filter(
+    if (!q) return menu;
+    return menu.filter(
       (m) => m.name.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [menu, query]);
 
   const grouped = useMemo(() => {
     const byCat = {};
@@ -39,11 +42,33 @@ export default function MenuPage() {
     }
   };
 
-  const itemsInCart = useMemo(() => new Map(cartItems.map((i) => [i.id, i.qty])), [cartItems]);
+  // Map lineId -> qty for in-cart indicator
+  const cartQtyByLine = useMemo(
+    () => new Map(cartItems.map((i) => [i.lineId, i.qty])),
+    [cartItems]
+  );
 
   const handleAdd = (it) => {
-    addItem({ id: it.id, name: it.name, price: it.price, category: it.category });
-    toast.success(`${it.name}`, { description: `Added · ₹${it.price}` });
+    const size = it.sizes && it.sizes.length > 0
+      ? it.sizes[selectedSizes[it.id] ?? 0]
+      : null;
+    addItem({
+      itemId: it.id,
+      name: it.name,
+      price: size ? size.price : it.base_price,
+      category: it.category,
+      sizeLabel: size ? size.label : null,
+    });
+    toast.success(it.name, {
+      description: size ? `${size.label} · ₹${size.price}` : `₹${it.base_price}`,
+    });
+  };
+
+  const getActiveLineIdForItem = (it) => {
+    const size = it.sizes && it.sizes.length > 0
+      ? it.sizes[selectedSizes[it.id] ?? 0]
+      : null;
+    return makeLineId(it.id, size ? size.label : null);
   };
 
   return (
@@ -55,12 +80,12 @@ export default function MenuPage() {
             <div>
               <div className="font-label text-[11px] text-primary mb-2">The full menu</div>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight">
-                {MENU.length}+ drinks,
+                {menu.length || "175"}+ drinks,
                 <br />
                 every mood covered.
               </h1>
               <p className="mt-3 text-sm sm:text-base font-sub text-muted-foreground max-w-xl">
-                From ₹30 cucumber lemon to ₹160 Kulfi Faloodas. Tap to add, then checkout via WhatsApp.
+                From ₹30 cucumber lemon to ₹340+ Lotus Biscoff large. Tap a size, add to cart, checkout via WhatsApp.
               </p>
             </div>
             <div className="w-full sm:w-auto sm:min-w-[320px]">
@@ -108,6 +133,15 @@ export default function MenuPage() {
         </div>
       </div>
 
+      {/* Loading skeleton */}
+      {loading && menu.length === 0 && (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="h-[86px] rounded-2xl bg-muted/60 animate-pulse" />
+          ))}
+        </div>
+      )}
+
       {/* Sections */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-14">
         {CATEGORIES.map((cat) => {
@@ -128,40 +162,72 @@ export default function MenuPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {list.map((it) => {
-                  const inCart = itemsInCart.get(it.id);
+                  const hasSizes = it.sizes && it.sizes.length > 0;
+                  const sizeIdx = selectedSizes[it.id] ?? 0;
+                  const currentPrice = hasSizes ? it.sizes[sizeIdx].price : it.base_price;
+                  const activeLineId = getActiveLineIdForItem(it);
+                  const qtyInCart = cartQtyByLine.get(activeLineId);
+
                   return (
                     <article
                       key={it.id}
-                      className="rounded-2xl bg-card border border-border p-4 flex items-center justify-between gap-3 hover:border-primary/30 transition-colors"
+                      className="rounded-2xl bg-card border border-border p-4 hover:border-primary/30 transition-colors"
                       data-testid={`menu-item-${it.id}`}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-sub text-[10px] uppercase tracking-wider text-muted-foreground">
-                          {it.category}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-sub text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {it.category}
+                          </div>
+                          <div className="font-display text-base font-medium truncate">{it.name}</div>
                         </div>
-                        <div className="font-display text-base font-medium truncate">{it.name}</div>
-                        <div className="text-sm font-semibold mt-0.5">₹{it.price}</div>
+                        <div className="text-sm font-bold shrink-0 tabular-nums">₹{currentPrice}</div>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAdd(it)}
-                        className={`rounded-full h-9 px-3 font-sub font-semibold shrink-0 ${
-                          inCart
-                            ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                            : "bg-primary text-primary-foreground hover:bg-primary/90"
-                        }`}
-                        data-testid={`menu-add-${it.id}`}
-                      >
-                        {inCart ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 mr-1" /> {inCart}
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="h-3.5 w-3.5 mr-1" /> Add
-                          </>
+
+                      <div className="mt-3 flex items-center gap-2">
+                        {hasSizes && (
+                          <div className="inline-flex rounded-full bg-muted p-0.5" data-testid={`size-selector-${it.id}`}>
+                            {it.sizes.map((s, i) => (
+                              <button
+                                key={s.label}
+                                onClick={() =>
+                                  setSelectedSizes((prev) => ({ ...prev, [it.id]: i }))
+                                }
+                                className={`px-2.5 h-7 rounded-full text-[11px] font-sub font-semibold transition-colors ${
+                                  sizeIdx === i
+                                    ? "bg-card text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                data-testid={`size-${it.id}-${s.label.toLowerCase()}`}
+                                aria-label={`${s.label} ₹${s.price}`}
+                              >
+                                {s.label.charAt(0)}
+                              </button>
+                            ))}
+                          </div>
                         )}
-                      </Button>
+                        <div className="flex-1" />
+                        <Button
+                          size="sm"
+                          onClick={() => handleAdd(it)}
+                          className={`rounded-full h-9 px-3 font-sub font-semibold ${
+                            qtyInCart
+                              ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90"
+                          }`}
+                          data-testid={`menu-add-${it.id}`}
+                        >
+                          {qtyInCart ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 mr-1" /> {qtyInCart}
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </article>
                   );
                 })}
@@ -170,7 +236,7 @@ export default function MenuPage() {
           );
         })}
 
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-20" data-testid="menu-empty">
             <div className="font-display text-2xl">Nothing matched "{query}"</div>
             <p className="text-sm text-muted-foreground mt-2">Try "oreo", "mint", or "falooda".</p>

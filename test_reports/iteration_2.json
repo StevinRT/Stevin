@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration-2 PJ Ours full-stack testing: 19/19 backend pytest cases PASS (admin auth, JWT, menu CRUD, outlet update, image upload + serve, size variants, public endpoints) and all targeted Playwright UI flows PASS (landing, menu 175 items, size-selector S/M/L with price update, cart-persistence across reload via localStorage pjours_cart_v2, size label in cart line 'Anar · Medium ₹120', parcel ₹5×qty, admin /admin login wrong→error right→dashboard, token persists across reload, menu+outlet tabs, item edit prefill, new-item dialog, logout clears token). No functional bugs found.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_pjours_api.py",
+    "/app/test_reports/pytest/pjours_api.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py: admin_login uses plain string comparison against ADMIN_PASSWORD (env var) — not bcrypt-hashed. Brute-force lockout (5 fails → 15 min lock on a single global key 'admin_global') is implemented, which is a reasonable compensating control for a single-admin app. Acceptable for this MVP but a hashed-in-DB admin credential would be more standard (see /app/auth_testing.md). JWT signing uses HS256 with a 64-char random JWT_SECRET — OK.",
+    "server.py: /api/files/{path} is public (by design for menu images). OK per spec, just worth noting for future leakage of non-menu files uploaded via /api/admin/upload which all go to pjours/menu/<uuid>.ext — safe.",
+    "server.py: admin_create_item reuses pydantic MenuItem(**body.model_dump(), position=...); if client sends a duplicate name, no uniqueness check is performed — acceptable since the UI treats each item as distinct.",
+    "admin_update_item converts sizes via model_dump but .model_dump() on the outer MenuItemUpdate already converts nested SizeVariant → dict, so the inner loop is defensive but redundant. No bug, minor cleanup.",
+    "Cart persistence key is 'pjours_cart_v2' in localStorage — survives reload correctly (verified). No TTL/versioning issue observed.",
+    "MenuPage data-testid convention: `size-<id>-<label_lowercase>` (e.g. size-<id>-medium). Review-request spec mentioned 'size-<itemId>-<label>' without case — this is worth noting for future testing agents; the label is lowercased server-label (Small/Medium/Large → small/medium/large).",
+    "Login lockout ties to a single global key so any failing attempt from any client counts against the shared admin — if used in production by multiple devices this may cause unexpected 15-min locks; acceptable given single-owner use.",
+    "No data-testid gaps found on any interactive element exercised."
+  ],
+  "updated_files": ["/app/backend/tests/test_pjours_api.py", "/app/backend/tests/__init__.py"],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% on exercised flows"},
+  "test_credentials": "Admin password: pjours@2026 (from /app/memory/test_credentials.md and /app/backend/.env ADMIN_PASSWORD). Verified working.",
+  "seed_data_creation": "No permanent seed data created. Backend test creates a TEST_AutoItem menu item and deletes it within same test. Outlet hours mutation is saved + restored in tryfinally so live data unchanged. Uploaded PNG is left at pjours/menu/<uuid>.png (object store) — intentionally kept small (≈70 bytes) and harmless, served via /api/files. LoginAttempts collection cleared before test run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest lives at /app/backend/tests/test_pjours_api.py — run with `cd /app/backend && REACT_APP_BACKEND_URL=<preview-url> pytest tests/ -v`. Size-selector testid is lowercased: `size-<itemId>-small|medium|large`. Cart is stored in localStorage key `pjours_cart_v2`; admin token in `pjours_admin_token`. Admin dashboard components: MenuManager uses data-testid `admin-menu-add-new`, `admin-item-edit-<id>`, `admin-item-delete-<id>`, `admin-menu-search`, `admin-menu-filter-category`; ItemEditDialog: `admin-item-name`, `admin-item-category`, `admin-item-base-price`, `admin-item-active`, `admin-item-popular`, `admin-item-add-size`, `admin-item-image-upload`, `admin-item-save`, `admin-item-cancel`; OutletManager: `outlet-<id>-whatsapp`, `admin-outlet-save-<id>`. Public URL: https://pj-cafe-drinks.preview.emergentagent.com. Admin password: pjours@2026. Brute-force lockout triggers after 5 bad logins for 15 min on collection login_attempts id='admin_global' — clear with `mongosh test_database --eval 'db.login_attempts.deleteMany({})'` if it gets locked during testing.",
+  "rca_of_the_issue": "N/A — no failures. All 17 reviewer-specified scenarios verified PASS."
+}

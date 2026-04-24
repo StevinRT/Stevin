@@ -1,8 +1,10 @@
 import { MapPin, Clock, MessageCircle } from "lucide-react";
-import { OUTLETS } from "@/data/menu";
+import { useData } from "@/context/DataContext";
 import { Button } from "@/components/ui/button";
 
 export default function Locations() {
+  const { outlets } = useData();
+
   return (
     <section id="locations" className="py-16 sm:py-24" data-testid="locations-section">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -20,7 +22,7 @@ export default function Locations() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {OUTLETS.map((o, idx) => (
+          {outlets.map((o, idx) => (
             <article
               key={o.id}
               className="rounded-3xl bg-card border border-border overflow-hidden card-shadow"
@@ -32,10 +34,10 @@ export default function Locations() {
                   className="w-full h-full"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://www.google.com/maps?q=${o.mapQuery}&output=embed`}
+                  src={`https://www.google.com/maps?q=${o.map_query}&output=embed`}
                 />
                 <span className="absolute top-3 left-3 rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-sub font-semibold">
-                  {idx === 0 ? "Outlet 01" : "Outlet 02"}
+                  {`Outlet 0${idx + 1}`}
                 </span>
               </div>
               <div className="p-6">
@@ -43,7 +45,7 @@ export default function Locations() {
                 <div className="mt-3 space-y-2 text-sm font-sub text-foreground/80">
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 text-primary mt-0.5" />
-                    <span>{o.fullAddress}</span>
+                    <span>{o.full_address}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Clock className="h-4 w-4 text-primary mt-0.5" />
@@ -67,7 +69,7 @@ export default function Locations() {
                     </Button>
                   </a>
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${o.mapQuery}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${o.map_query}`}
                     target="_blank"
                     rel="noreferrer"
                     data-testid={`outlet-directions-${o.id}`}

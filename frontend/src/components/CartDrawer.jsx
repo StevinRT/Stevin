@@ -8,23 +8,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useCart, PARCEL_CHARGE_PER_ITEM } from "@/context/CartContext";
-import { OUTLETS } from "@/data/menu";
-import { buildOrderMessage, buildWhatsAppUrl, getOutletById } from "@/lib/whatsapp";
+import { useData } from "@/context/DataContext";
+import { buildOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { toast } from "sonner";
 
 export default function CartDrawer() {
   const {
-    items, addItem, decrementItem, removeItem, clearCart,
+    items, incrementLine, decrementLine, removeLine, clearCart,
     itemCount, subtotal, parcel, grandTotal,
     isOpen, setIsOpen, closeCart,
   } = useCart();
+  const { outlets } = useData();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [orderType, setOrderType] = useState("Pickup"); // Pickup | Delivery
+  const [orderType, setOrderType] = useState("Pickup");
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
-  const [outletId, setOutletId] = useState(""); // MUST be chosen before ordering
+  const [outletId, setOutletId] = useState("");
   const [errors, setErrors] = useState({});
 
   const validate = () => {
@@ -43,7 +44,11 @@ export default function CartDrawer() {
       toast.error("Please complete the order details", { description: "Outlet selection is required." });
       return;
     }
-    const outlet = getOutletById(outletId);
+    const outlet = outlets.find((o) => o.id === outletId);
+    if (!outlet) {
+      toast.error("Outlet not found. Please refresh and try again.");
+      return;
+    }
     const message = buildOrderMessage({
       items, subtotal, parcel, grandTotal,
       customer: { name: name.trim(), phone: phone.trim(), orderType, address: address.trim(), note: note.trim() },
@@ -54,7 +59,6 @@ export default function CartDrawer() {
     toast.success(`Order sent to ${outlet.name} on WhatsApp`, {
       description: "We've opened WhatsApp — just hit send!",
     });
-    // Keep cart so user can double-check; auto-close drawer
     setIsOpen(false);
   };
 
@@ -96,36 +100,38 @@ export default function CartDrawer() {
           </div>
         ) : (
           <>
-            {/* Items */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3" data-testid="cart-items-list">
               {items.map((it) => (
                 <div
-                  key={it.id}
+                  key={it.lineId}
                   className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
-                  data-testid={`cart-item-${it.id}`}
+                  data-testid={`cart-item-${it.lineId}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-sub text-[10px] text-muted-foreground uppercase tracking-wider">{it.category}</div>
-                    <div className="font-semibold text-sm truncate">{it.name}</div>
+                    <div className="font-semibold text-sm truncate">
+                      {it.name}
+                      {it.sizeLabel && <span className="ml-1 text-[11px] font-normal text-muted-foreground">· {it.sizeLabel}</span>}
+                    </div>
                     <div className="text-xs text-muted-foreground mt-0.5">₹{it.price} each</div>
                   </div>
 
                   <div className="flex items-center gap-2 bg-muted rounded-full p-1">
                     <button
                       className="h-7 w-7 rounded-full bg-card hover:bg-background flex items-center justify-center"
-                      onClick={() => decrementItem(it.id)}
-                      data-testid={`cart-decrement-${it.id}`}
+                      onClick={() => decrementLine(it.lineId)}
+                      data-testid={`cart-decrement-${it.lineId}`}
                       aria-label={`Decrease ${it.name}`}
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
-                    <span className="w-6 text-center text-sm font-semibold" data-testid={`cart-qty-${it.id}`}>
+                    <span className="w-6 text-center text-sm font-semibold" data-testid={`cart-qty-${it.lineId}`}>
                       {it.qty}
                     </span>
                     <button
                       className="h-7 w-7 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center"
-                      onClick={() => addItem(it)}
-                      data-testid={`cart-increment-${it.id}`}
+                      onClick={() => incrementLine(it.lineId)}
+                      data-testid={`cart-increment-${it.lineId}`}
                       aria-label={`Increase ${it.name}`}
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -136,8 +142,8 @@ export default function CartDrawer() {
 
                   <button
                     className="text-muted-foreground hover:text-destructive p-1"
-                    onClick={() => removeItem(it.id)}
-                    data-testid={`cart-remove-${it.id}`}
+                    onClick={() => removeLine(it.lineId)}
+                    data-testid={`cart-remove-${it.lineId}`}
                     aria-label={`Remove ${it.name}`}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -147,45 +153,24 @@ export default function CartDrawer() {
 
               <Separator className="my-4" />
 
-              {/* Customer details */}
               <div className="space-y-4" data-testid="checkout-form">
                 <h3 className="font-display text-lg font-semibold">Order details</h3>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="cust-name" className="font-sub text-xs">Full Name *</Label>
-                  <Input
-                    id="cust-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Ananya"
-                    className="rounded-xl"
-                    data-testid="input-customer-name"
-                  />
+                  <Input id="cust-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ananya" className="rounded-xl" data-testid="input-customer-name" />
                   {errors.name && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3"/>{errors.name}</p>}
                 </div>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="cust-phone" className="font-sub text-xs">Phone Number *</Label>
-                  <Input
-                    id="cust-phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 XXXXX XXXXX"
-                    className="rounded-xl"
-                    data-testid="input-customer-phone"
-                  />
+                  <Input id="cust-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="rounded-xl" data-testid="input-customer-phone" />
                   {errors.phone && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3"/>{errors.phone}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label className="font-sub text-xs">Order Type</Label>
-                  <RadioGroup
-                    value={orderType}
-                    onValueChange={setOrderType}
-                    className="grid grid-cols-2 gap-2"
-                    data-testid="order-type-group"
-                  >
+                  <RadioGroup value={orderType} onValueChange={setOrderType} className="grid grid-cols-2 gap-2" data-testid="order-type-group">
                     {["Pickup", "Delivery"].map((t) => (
                       <label
                         key={t}
@@ -205,14 +190,7 @@ export default function CartDrawer() {
                 {orderType === "Delivery" && (
                   <div className="space-y-1.5">
                     <Label htmlFor="cust-addr" className="font-sub text-xs">Delivery Address *</Label>
-                    <Textarea
-                      id="cust-addr"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Building / street / landmark"
-                      className="rounded-xl min-h-[72px]"
-                      data-testid="input-customer-address"
-                    />
+                    <Textarea id="cust-addr" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Building / street / landmark" className="rounded-xl min-h-[72px]" data-testid="input-customer-address" />
                     {errors.address && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3"/>{errors.address}</p>}
                   </div>
                 )}
@@ -228,7 +206,7 @@ export default function CartDrawer() {
                     className="grid grid-cols-2 gap-2"
                     data-testid="outlet-select-group"
                   >
-                    {OUTLETS.map((o) => (
+                    {outlets.map((o) => (
                       <label
                         key={o.id}
                         className={`cursor-pointer rounded-xl border-2 p-3 transition-all ${
@@ -241,7 +219,7 @@ export default function CartDrawer() {
                           <span className={`w-4 h-4 rounded-full border-2 ${outletId === o.id ? "border-primary bg-primary" : "border-muted-foreground"}`} />
                           <span className="font-sub text-sm font-semibold">{o.name}</span>
                         </div>
-                        <div className="text-[11px] text-muted-foreground mt-1 ml-6">{o.fullAddress.split(",")[0]}</div>
+                        <div className="text-[11px] text-muted-foreground mt-1 ml-6">{o.full_address.split(",")[0]}</div>
                       </label>
                     ))}
                   </RadioGroup>
@@ -250,19 +228,11 @@ export default function CartDrawer() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="cust-note" className="font-sub text-xs">Note (optional)</Label>
-                  <Textarea
-                    id="cust-note"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="e.g. no sugar, extra cornflakes"
-                    className="rounded-xl min-h-[60px]"
-                    data-testid="input-customer-note"
-                  />
+                  <Textarea id="cust-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. no sugar, extra cornflakes" className="rounded-xl min-h-[60px]" data-testid="input-customer-note" />
                 </div>
               </div>
             </div>
 
-            {/* Totals + CTA */}
             <div className="border-t border-border bg-card px-5 py-4 space-y-3" data-testid="cart-footer">
               <div className="space-y-1 text-sm font-sub">
                 <Row label="Subtotal" value={`₹${subtotal}`} />

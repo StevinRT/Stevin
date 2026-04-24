@@ -1,4 +1,3 @@
-import { OUTLETS } from "@/data/menu";
 import { PARCEL_CHARGE_PER_ITEM } from "@/context/CartContext";
 
 export function buildOrderMessage({ items, subtotal, parcel, grandTotal, customer, outlet }) {
@@ -16,7 +15,8 @@ export function buildOrderMessage({ items, subtotal, parcel, grandTotal, custome
   lines.push("");
   lines.push("*Items:*");
   items.forEach((i) => {
-    lines.push(`• ${i.name} × ${i.qty}  —  ₹${i.price * i.qty}`);
+    const suffix = i.sizeLabel ? ` (${i.sizeLabel})` : "";
+    lines.push(`• ${i.name}${suffix} × ${i.qty}  —  ₹${i.price * i.qty}`);
   });
   lines.push("");
   lines.push(`Subtotal: ₹${subtotal}`);
@@ -25,10 +25,6 @@ export function buildOrderMessage({ items, subtotal, parcel, grandTotal, custome
   lines.push("");
   lines.push("_Sent from pj-ours.com_");
   return lines.join("\n");
-}
-
-export function getOutletById(id) {
-  return OUTLETS.find((o) => o.id === id);
 }
 
 export function buildWhatsAppUrl(outlet, message) {
