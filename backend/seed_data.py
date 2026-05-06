@@ -89,7 +89,7 @@ MILK_SHAKE = [
     ("Jack Fruit", 55, 115, 220, False),
     ("Malai Kulfi", 80, 165, 320, False),
     ("Kiwi", 80, 165, 320, False),
-    ("Lotus Biscoff", 85, 175, 340, False), #popular
+    ("Lotus Biscoff", 85, 175, 340, True), #popular
     ("Mango", 60, 125, 240, False),
     ("Mixed Fruit", 50, 105, 200, False),
     ("Muskmelon (Shamam)", 40, 85, 160, False),
