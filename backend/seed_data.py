@@ -33,9 +33,6 @@ FUSION_SHAKE = [
     ("Apple Chickoo", 60, 125, 245, False),
     ("Apple Papaya", 60, 125, 245, False),
     ("Badam Pista", 60, 125, 245, False),
-]
-
-AVIL_MILK = [
     ("Chickoo Chocolate", 60, 125, 245, False),
     ("Chickoo Sharjah", 60, 125, 245, False),
     ("Chickoo Custard Apple", 60, 125, 245, False),
@@ -57,6 +54,11 @@ AVIL_MILK = [
     ("Tender Dates", 80, 165, 325, False),
     ("Tender Mango", 80, 165, 325, False),
     ("Tender Caramel", 80, 165, 325, False),
+    ("Tender Chocolate", 80, 165, 325, True),
+]
+
+AVIL_MILK = [
+    
     ("Tender Chocolate", 80, 165, 325, True),  # popular
 ]
 
@@ -70,6 +72,37 @@ MILK_SHAKE = [
     ("Boost", 60, 125, 240, False),
     ("Brownie", 60, 125, 240, False),
     ("Butterscotch", 50, 105, 200, False),
+    ("Caramel", 50, 105, 200, False),
+    ("Cherry (Kashmiri)", 40, 85, 160, False),
+    ("Chickoo", 50, 105, 200, False),
+    ("Chocolate", 40, 85, 160, False),
+    ("Coffee Blast", 60, 125, 240, False),
+    ("Cold Coffee", 50, 105, 200, False),
+    ("Custard Apple", 50, 105, 200, False),
+    ("Dark Fantasy", 45, 95, 180, False),
+    ("Dates (Saudi)", 40, 85, 160, False),
+    ("Dry Fruits", 60, 125, 240, False),
+    ("Grape", 40, 85, 160, False),
+    ("Guava", 40, 85, 160, False),
+    ("Horlicks", 50, 105, 200, False),
+    ("Ice Apple (Pananongu)", 50, 105, 200, False),
+    ("Jack Fruit", 55, 115, 220, False),
+    ("Malai Kulfi", 80, 165, 320, False),
+    ("Kiwi", 80, 165, 320, False),
+    ("Lotus Biscoff", 85, 175, 340, False), #popular
+    ("Mango", 60, 125, 240, False),
+    ("Mixed Fruit", 50, 105, 200, False),
+    ("Muskmelon (Shamam)", 40, 85, 160, False),
+    ("Oreo", 40, 85, 160, True),  # popular
+    ("Papaya", 40, 85, 160, False),
+    ("Peanut Butter", 80, 165, 320, False),
+    ("Pineapple", 40, 85, 160, False),
+    ("Pista", 40, 85, 160, False),
+    ("Pomegranate", 60, 125, 240, False),
+    ("Strawberry", 50, 105, 200, False),
+    ("Special Dry Fruits", 90, 185, 360, False),
+    ("Vanilla", 40, 85, 160, False),
+    ("Tender Coconut", 70, 145, 280, False),
 ]
 
 DESSERTS = [
@@ -181,7 +214,7 @@ MOJITO = [
 
 # Categories in display order
 CATEGORIES_ORDER = [
-    "Juice", "Fusion Shake", "Avil Milk", "Milk Shake", "Desserts",
+    "Juice", "Fusion Shake", "Milk Shake", "Desserts",
     "Ice Cream Shakes", "Falooda", "Ice Cream", "Fruit Soda", "Mocktail", "Mojito",
 ]
 
